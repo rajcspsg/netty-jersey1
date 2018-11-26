@@ -1,11 +1,13 @@
 package com.demo.netty.jersey;
 
-import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
-import io.netty.handler.codec.http.HttpServerCodec;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.handler.codec.http.HttpObjectAggregator;
+import io.netty.handler.codec.http.HttpRequestDecoder;
+import io.netty.handler.codec.http.HttpResponseEncoder;
 
-public class JaxRsServerChannelPipelineFactory extends ChannelInitializer<Channel> {
+public class JaxRsServerChannelPipelineFactory extends ChannelInitializer<SocketChannel> {
 
     private JerseyHandler jerseyHandler;
     private ChannelPipeline pipeline;
@@ -31,9 +33,12 @@ public class JaxRsServerChannelPipelineFactory extends ChannelInitializer<Channe
     }
 
     @Override
-    protected void initChannel(Channel ch) {
+    protected void initChannel(SocketChannel ch) {
         pipeline = ch.pipeline();
-        ch.pipeline().addLast("codec", new HttpServerCodec());
+        pipeline.addLast("encoder", new HttpResponseEncoder());
+        pipeline.addLast("decoder", new HttpRequestDecoder());
+        pipeline.addLast("aggregator", new HttpObjectAggregator(1024));
         pipeline.addLast("jerseyHandler", jerseyHandler);
+
     }
 }

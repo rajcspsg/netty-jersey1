@@ -10,7 +10,6 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
-
 import java.io.OutputStream;
 
 public class JerseyResponseWriter implements ContainerResponseWriter {

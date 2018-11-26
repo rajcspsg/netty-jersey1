@@ -8,7 +8,6 @@ import io.netty.channel.WriteBufferWaterMark;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.net.SocketAddress;
 
 public class NettyServer {
