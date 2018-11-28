@@ -1,11 +1,11 @@
-package com.demo.netty.jersey.resource;
+package me.netty.jersey;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
 @Path("/hellonetty")
-public class JerseyResource {
+public class HelloNettyEndpoint {
 
     @GET
     @Produces("text/plain")
