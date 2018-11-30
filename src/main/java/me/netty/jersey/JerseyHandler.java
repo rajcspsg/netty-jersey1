@@ -8,10 +8,7 @@ import com.sun.jersey.spi.container.ContainerResponseWriter;
 import com.sun.jersey.spi.container.WebApplication;
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.buffer.ByteBufOutputStream;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelHandler;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.channel.*;
 import io.netty.handler.codec.http.*;
 import javax.ws.rs.core.SecurityContext;
 import java.io.OutputStream;
@@ -33,29 +30,71 @@ public class JerseyHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
         baseUri = null;
     }
 
+//    @Override
+//    protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest request) {
+//        boolean keepAlive = HttpUtil.isKeepAlive(request);
+//        HttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
+//        ChannelFuture future;
+//        if (response!=null) {
+//            future = ctx.writeAndFlush(response);
+//        } else {
+//            future = ctx.channel().closeFuture();
+//        }
+//        if (!keepAlive) {
+//            future.addListener(ChannelFutureListener.CLOSE);
+//        }
+//    }
+
+//    netty 3.8.0
+//            request.getMethod().getName() GET
+//    baseUri http://localhost:8888/
+//    requestUri http://localhost:8888/imdb/reload
+//
+//    netty 4.x.x
+//request.method().name() GET
+//    baseUri http://localhost:8080:8080/
+//    fullRequestUri http://0:0:0:0:0:0:0:1:8080/hellonetty
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+        cause.printStackTrace();
+        ctx.close();
+    }
+
     @Override
     protected void channelRead0(ChannelHandlerContext context, FullHttpRequest request) throws Exception {
         System.out.println("request received \n "+ request);
+
+        System.out.println("request.getProtocolVersion().protocolName().toLowerCase() "+ request.getProtocolVersion().protocolName().toLowerCase());
+        System.out.println("context.channel().localAddress().toString() "+ context.channel().localAddress().toString());
+        System.out.println(request.uri());
+        //if (request.uri().equals("/favicon.ico")) return;
         URI applicationURI = createAppURI(
                 request.getProtocolVersion().protocolName().toLowerCase(),
                 context.channel().localAddress().toString()
         );
 
-        URI fullRequestUri = createFullURI(
+        /*URI fullRequestUri = createFullURI(
                 request.getProtocolVersion().protocolName().toLowerCase(),
                 context.channel().localAddress().toString(),
                 request.getUri()
-        );
+        );*/
+
+
 
         final String base = getBaseUri(request);
+        System.out.println("base "+ base);
+        URI fullRequestUri = new URI(base + request.uri().substring(1));
         final URI baseUri = new URI(base);
         final URI requestUri = new URI(base.substring(0, base.length() - 1)
                 + request.getUri());
+        context.writeAndFlush(new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK));
+        System.out.println("request.method().name() " +request.method().name() + "\n baseUri " + baseUri + " \nfullRequestUri " + fullRequestUri);
 
         final ContainerRequest cRequest = new ContainerRequest(application, request.method().name(), baseUri,
                 fullRequestUri, getHeaders(request), new ByteBufInputStream(request.content()));
 
-        application.handleRequest(cRequest, new JerseyResponseWriter(context.channel()));
+        application.handleRequest(cRequest, new JerseyResponseWriter(context));
     }
 
     private URI createAppURI(String protocolName, String address) throws URISyntaxException {
@@ -97,17 +136,17 @@ public class JerseyHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
     private String getBaseUri(final FullHttpRequest request) {
         String baseUri = this.baseUri;
         if (baseUri == null) {
-            baseUri = "http://" + request.headers().get(HttpHeaderNames.HOST) + ":8080/";
+            baseUri = "http://" + request.headers().get(HttpHeaderNames.HOST) + "/";
         }
         return baseUri;
     }
 
     private final  class JerseyResponseWriter implements ContainerResponseWriter {
 
-        private final transient Channel channel;
+        private final transient ChannelHandlerContext channel;
         private transient DefaultFullHttpResponse response;
 
-        public JerseyResponseWriter(Channel channel) {
+        public JerseyResponseWriter(ChannelHandlerContext channel) {
             this.channel = channel;
         }
 
@@ -128,7 +167,7 @@ public class JerseyHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
         @Override
         public void finish() {
             System.out.println("\n\n\n in response writer respone " + response);
-            channel.writeAndFlush(response);
+                channel.writeAndFlush(response);
         }
     }
 

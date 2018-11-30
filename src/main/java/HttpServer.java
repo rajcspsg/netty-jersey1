@@ -6,8 +6,12 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
+
 public class HttpServer {
     public static final int PORT = 8080;
+    public static final String host = "127.0.0.1";
 
     private final EventLoopGroup bossGroup;
     private final EventLoopGroup workerGroup;
@@ -36,11 +40,15 @@ public class HttpServer {
             bossGroup.shutdownGracefully();
             workerGroup.shutdownGracefully();
         }
+    }
 
+    private static SocketAddress getLocalSocket() {
+        return new InetSocketAddress(host, PORT );
     }
 
     public void startAsync() {
-        bootstrap.bind(PORT);
+
+        bootstrap.bind(getLocalSocket());
 
         Runtime.getRuntime().addShutdownHook(new Thread() {
 
