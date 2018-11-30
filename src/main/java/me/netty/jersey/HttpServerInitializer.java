@@ -1,3 +1,4 @@
+package me.netty.jersey;
 import com.sun.jersey.api.container.ContainerFactory;
 import com.sun.jersey.api.core.ResourceConfig;
 import io.netty.channel.ChannelHandler;

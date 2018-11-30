@@ -62,6 +62,12 @@ public class JerseyHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
     }
 
     @Override
+    public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
+        super.channelReadComplete(ctx);
+        ctx.flush();
+    }
+
+    @Override
     protected void channelRead0(ChannelHandlerContext context, FullHttpRequest request) throws Exception {
         System.out.println("request received \n "+ request);
 
@@ -103,27 +109,6 @@ public class JerseyHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
 
     private URI createFullURI(String protocolName, String address, String path) throws URISyntaxException {
         return new URI(String.format("%s:/%s%s", protocolName, address, path));
-    }
-
-    private SecurityContext getSecurityContext() {
-        return new SecurityContext() {
-
-            public boolean isUserInRole(String role) {
-                return false;
-            }
-
-            public boolean isSecure() {
-                return false;
-            }
-
-            public Principal getUserPrincipal() {
-                return null;
-            }
-
-            public String getAuthenticationScheme() {
-                return null;
-            }
-        };
     }
 
     private InBoundHeaders getHeaders(final FullHttpRequest request) {

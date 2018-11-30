@@ -1,3 +1,4 @@
+package me.netty.jersey;
 import com.sun.jersey.api.core.PackagesResourceConfig;
 import com.sun.jersey.api.core.ResourceConfig;
 import io.netty.bootstrap.ServerBootstrap;
