@@ -36,7 +36,7 @@ public class SimpleHTTPServer {
                             ch.pipeline().addLast("aggregator",
                                     new HttpObjectAggregator(512 * 1024));
                             ch.pipeline().addLast("flowcontroller", new FlowControlHandler());
-                            String[] pkgs = new String[] { "me.netty.jersey" };
+                            String[] pkgs = new String[] { "ads.netty.jersey.resources", "com.fasterxml.jackson.jaxrs.json" };
                             ResourceConfig resourceConfig = new PackagesResourceConfig(pkgs);
                             SimpleHTTPHandler handler = ContainerFactory.createContainer(SimpleHTTPHandler.class, resourceConfig);
                             ch.pipeline().addLast("request",

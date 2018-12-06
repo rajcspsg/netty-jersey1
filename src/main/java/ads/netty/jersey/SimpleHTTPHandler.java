@@ -2,20 +2,17 @@ package ads.netty.jersey;
 
 import com.sun.jersey.api.core.ResourceConfig;
 import com.sun.jersey.core.header.InBoundHeaders;
+import com.sun.jersey.spi.container.ContainerRequest;
 import com.sun.jersey.spi.container.WebApplication;
+import io.netty.buffer.ByteBufInputStream;
 import io.netty.buffer.Unpooled;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.*;
-
+import java.io.IOException;
+import java.net.URI;
 import java.util.Arrays;
-
-import static io.netty.handler.codec.http.HttpHeaderNames.CONNECTION;
-import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_LENGTH;
-import static io.netty.handler.codec.http.HttpResponseStatus.OK;
-import static io.netty.handler.codec.http.HttpUtil.isKeepAlive;
+import static io.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERROR;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
 public class SimpleHTTPHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
@@ -31,9 +28,6 @@ public class SimpleHTTPHandler extends SimpleChannelInboundHandler<FullHttpReque
         return resourceConfig;
     }
 
-
-
-
     public SimpleHTTPHandler(WebApplication applicationHandler, ResourceConfig resourceConfig) {
         super(false);
         this.applicationHandler = applicationHandler;
@@ -42,16 +36,26 @@ public class SimpleHTTPHandler extends SimpleChannelInboundHandler<FullHttpReque
 
     protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest request) {
         System.out.println("in SimpleHTTPHandler");
-        FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, OK, Unpooled.copiedBuffer("My Netty".getBytes()), false);
-        response.headers().add(request.headers());
-        response.headers().set(CONTENT_LENGTH, response.content().readableBytes());
-        boolean isKeepAlive = isKeepAlive(request);
-        if (isKeepAlive) {
-            response.headers().set(CONNECTION, HttpHeaderValues.KEEP_ALIVE);
+        try {
+            if (request.getUri().equals("/favicon.ico")) return;
+            final String base = getBaseUri(request);
+            final URI baseUri = new URI(base);
+            URI fullRequestUri = new URI(base + request.uri().substring(1));
+            System.out.println("baseUri " + baseUri + " fullRequestUri " + fullRequestUri);
+            final ContainerRequest cRequest = new ContainerRequest(applicationHandler, request.method().name(), baseUri,
+                    fullRequestUri, getHeaders(request), new ByteBufInputStream(request.content()));
+
+            try {
+                applicationHandler.handleRequest(cRequest, new JerseyResponseWriter(ctx));
+            } catch (IOException ioe) {
+                ioe.printStackTrace();
+
+            } catch (Exception e) {
+                ctx.writeAndFlush(new DefaultFullHttpResponse(HTTP_1_1, INTERNAL_SERVER_ERROR, Unpooled.copiedBuffer(e.toString().getBytes())));
+            }
+        }catch (Exception e) {
+            e.printStackTrace();
         }
-        ChannelFuture f = ctx.writeAndFlush(response);
-        if(!isKeepAlive)
-            f.addListener(ChannelFutureListener.CLOSE);
         ctx.close();
     }
 
@@ -75,10 +79,6 @@ public class SimpleHTTPHandler extends SimpleChannelInboundHandler<FullHttpReque
     }
 
     private String getBaseUri(final FullHttpRequest request) {
-        String baseUri = this.getBaseUri(request);
-        if (baseUri == null) {
-            baseUri = "http://" + request.headers().get(HttpHeaderNames.HOST) + "/";
-        }
-        return baseUri;
+        return "http://" + request.headers().get(HttpHeaderNames.HOST) + "/";
     }
 }
