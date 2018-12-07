@@ -9,7 +9,6 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.*;
-import java.io.IOException;
 import java.net.URI;
 import java.util.Arrays;
 import static io.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERROR;
@@ -45,16 +44,13 @@ public class SimpleHTTPHandler extends SimpleChannelInboundHandler<FullHttpReque
             final ContainerRequest cRequest = new ContainerRequest(applicationHandler, request.method().name(), baseUri,
                     fullRequestUri, getHeaders(request), new ByteBufInputStream(request.content()));
 
-            try {
-                applicationHandler.handleRequest(cRequest, new JerseyResponseWriter(ctx));
-            } catch (IOException ioe) {
-                ioe.printStackTrace();
+            applicationHandler.handleRequest(cRequest, new JerseyResponseWriter(ctx));
 
-            } catch (Exception e) {
-                ctx.writeAndFlush(new DefaultFullHttpResponse(HTTP_1_1, INTERNAL_SERVER_ERROR, Unpooled.copiedBuffer(e.toString().getBytes())));
-            }
-        }catch (Exception e) {
+        } catch (Exception e) {
+            ctx.writeAndFlush(new DefaultFullHttpResponse(HTTP_1_1, INTERNAL_SERVER_ERROR, Unpooled.copiedBuffer(e.toString().getBytes())));
             e.printStackTrace();
+        } finally {
+            if(!HttpUtil.isKeepAlive(request)) ctx.close();
         }
         ctx.close();
     }

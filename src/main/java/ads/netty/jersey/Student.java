@@ -19,4 +19,9 @@ public class Student {
     public void setAge(int age) {
         this.age = age;
     }
+
+    @Override
+    public String toString() {
+        return String.format("Student{ name = %s age = %d} ", name, age);
+    }
 }

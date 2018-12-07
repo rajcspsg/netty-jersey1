@@ -14,8 +14,6 @@ import io.netty.handler.flow.FlowControlHandler;
 
 public class SimpleHTTPServer {
 
-
-
     public SimpleHTTPServer() {
 
     }
@@ -27,7 +25,6 @@ public class SimpleHTTPServer {
             EventLoopGroup workerGroup = new NioEventLoopGroup();
 
             b.group(bossGroup, workerGroup)
-
                     .channel(NioServerSocketChannel.class)
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override

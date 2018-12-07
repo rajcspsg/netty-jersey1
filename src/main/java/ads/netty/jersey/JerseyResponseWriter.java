@@ -36,8 +36,5 @@ public final class JerseyResponseWriter implements ContainerResponseWriter {
     @Override
     public void finish() {
         System.out.println("\n\n\n in response writer response " + response);
-
-        ctx.close();
-
     }
 }

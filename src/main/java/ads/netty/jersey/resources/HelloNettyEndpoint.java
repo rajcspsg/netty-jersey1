@@ -28,8 +28,8 @@ public class HelloNettyEndpoint {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces("text/plain")
     @Path("/student/text")
-    public String getText(String req) {
-        System.out.println("request is \n "+ req);
+    public String getText(Student req) {
+        System.out.println("request is  "+ req);
         return "Hello Netty";
     }
 
