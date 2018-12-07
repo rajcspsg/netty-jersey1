@@ -36,14 +36,13 @@ public class SimpleHTTPHandler extends SimpleChannelInboundHandler<FullHttpReque
     protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest request) {
         System.out.println("in SimpleHTTPHandler");
         try {
-            if (request.getUri().equals("/favicon.ico")) return;
+            if (request.uri().equals("/favicon.ico")) return;
             final String base = getBaseUri(request);
             final URI baseUri = new URI(base);
             URI fullRequestUri = new URI(base + request.uri().substring(1));
             System.out.println("baseUri " + baseUri + " fullRequestUri " + fullRequestUri);
             final ContainerRequest cRequest = new ContainerRequest(applicationHandler, request.method().name(), baseUri,
                     fullRequestUri, getHeaders(request), new ByteBufInputStream(request.content()));
-
             applicationHandler.handleRequest(cRequest, new JerseyResponseWriter(ctx));
 
         } catch (Exception e) {
@@ -52,7 +51,6 @@ public class SimpleHTTPHandler extends SimpleChannelInboundHandler<FullHttpReque
         } finally {
             if(!HttpUtil.isKeepAlive(request)) ctx.close();
         }
-        ctx.close();
     }
 
     @Override
